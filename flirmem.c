@@ -213,20 +213,24 @@ int main(int argc, char *argv[])
 	printf("bits per word: %d\n", bits);
 	printf("max speed: %d Hz (%d KHz)\n", speed, speed/1000);
 
-	lepton_image = (uint16_t*) open_shm();
-
-	int row;
-	while ((row=transfer(fd)) != COLSZ - 1) {
+        while(1)
+	{
+		lepton_image = (uint16_t*) open_shm();
+		int row;
+		while ((row=transfer(fd)) != COLSZ - 1) {
 #ifdef DEBUG
-		if (row == -1) {
-			fprintf(stderr, "Incorrect row returned, retrying...\n");
-			//abort();
-		}
+			if (row == -1) {
+				fprintf(stderr, "Incorrect row returned, retrying...\n");
+				//abort();
+			}
 #endif
+		}
+	sleep(1);
+        //close_shm();
 	}
 
 	close(fd);
-	save_pgm_file();
+	//save_pgm_file();
 
 	return ret;
 }
