@@ -1,3 +1,4 @@
+/* -*- mode: c; indent-tabs-mode: t; c-basic-offset: 8 -*- */
 /*
 Copyright (c) 2014, Pure Engineering LLC
 Copyright (c) 2015, Andrew Berezovskyi
