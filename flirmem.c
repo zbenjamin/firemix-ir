@@ -64,13 +64,11 @@ static uint16_t delay;
 uint8_t lepton_frame_packet[VOSPI_FRAME_SIZE];
 uint16_t* lepton_image;
 
-/*
 static void save_pgm_file(void)
 {
 	int i;
-	int j;
 	unsigned int maxval = 0;
-    unsigned int minval = UINT_MAX;
+	unsigned int minval = UINT_MAX;
 
 	FILE *f = fopen("image.pgm", "w");
 	if (f == NULL)
@@ -80,35 +78,28 @@ static void save_pgm_file(void)
 	}
 
 	printf("Calculating min/max values for proper scaling...\n");
-	for(i=0;i<COLSZ;i++)
+	for(i=0;i<COLSZ*ROWSZ;i++)
 	{
-		for(j=0;j<ROWSZ;j++)
-		{
-			if (lepton_image[i][j] > maxval) {
-				maxval = lepton_image[i][j];
-			}
-			if (lepton_image[i][j] < minval) {
-				minval = lepton_image[i][j];
-			}
+		if (lepton_image[i] > maxval) {
+			maxval = lepton_image[i];
+		}
+		if (lepton_image[i] < minval) {
+			minval = lepton_image[i];
 		}
 	}
 	printf("maxval = %u\n",maxval);
 	printf("minval = %u\n",minval);
 	
 	fprintf(f,"P2\n80 60\n%u\n",maxval-minval);
-	for(i=0;i<60;i++)
+	for(i=0;i<ROWSZ*COLSZ;i++)
 	{
-		for(j=0;j<ROWSZ;j++)
-		{
-			fprintf(f,"%d ", lepton_image[i][j] - minval);
-		}
+		fprintf(f,"%d ", lepton_image[i] - minval);
 		fprintf(f,"\n");
 	}
 	fprintf(f,"\n\n");
 
 	fclose(f);
 }
-*/
 
 int transfer(int fd)
 {
@@ -235,6 +226,7 @@ int main(int argc, char *argv[])
 	}
 
 	close(fd);
+	save_pgm_file();
 
 	return ret;
 }
