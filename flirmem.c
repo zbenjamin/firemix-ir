@@ -148,11 +148,11 @@ void* open_shm(void)
 {
 	void* mem;
 	int fd = shm_open("lepton_data", O_RDWR | O_CREAT, 0);
-	if (fd < 1)
+	if (fd < 0)
 		pabort("can't open shared memory region");
 
 	int res = ftruncate(fd, SHMSZ);
-	if (res < 1)
+	if (res < 0)
 		pabort("can't ftruncate shared memory fd");
 
 	mem = mmap(NULL, SHMSZ, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
