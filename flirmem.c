@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits.h>
 
 #include <sys/ipc.h>
-#include <sys/shm.h>
+#include <sys/mman.h>
 #include <sys/ipc.h>
 
 #define SHMSZ    38400 //80x60x8bit
@@ -59,71 +59,7 @@ static uint16_t delay;
 
 #define VOSPI_FRAME_SIZE (164)
 uint8_t lepton_frame_packet[VOSPI_FRAME_SIZE];
-static uint16_t lepton_image[60][80];
-
-static void memorize_pgm(void)
-{
-
-	int i;
-	int j;
-        int shmid;
-        key_t key;
-        uint16_t *shm,*s;
-	uint16_t maxval = 0;
-    unsigned int minval = UINT_MAX;
-    /*
-     * Assign memory pointer
-     */
-    key = 5242;
-    /*
-     * Create the segment.
-     */
-    if ((shmid = shmget(key, SHMSZ, IPC_CREAT | 0666)) < 0) {
-        perror("shmget");
-        exit(1);
-    }
-       /*
-     * attach the segment to data space.
-     */
-    if ((shm = shmat(shmid, NULL, 0)) == (uint *) -1) {
-        perror("shmat");
-        exit(1);
-    }
-
-    /*
-     *   make stuff happen
-     */ 
-
-	printf("Calculating min/max values for proper scaling...\n");
-	for(i=0;i<60;i++)
-	{
-		for(j=0;j<80;j++)
-		{
-			if (lepton_image[i][j] > maxval) {
-				maxval = lepton_image[i][j];
-			}
-			if (lepton_image[i][j] < minval) {
-				minval = lepton_image[i][j];
-			}
-		}
-	}
-	printf("maxval = %u\n",maxval);
-	printf("minval = %u\n",minval);
-	printf("int = %u\n",sizeof(uint));
-	//printf(sizeof(int) );
-	
-	//fprintf(f,"P2\n80 60\n%u\n",maxval-minval);
-        s = shm;
-	for(i=0;i<60;i++)
-	{
-		for(j=0;j<80;j++)
-		{
-		*s++ =	 lepton_image[i][j] - minval;
-		}
-	}
-        *s = NULL;
-
-}
+uint16_t** lepton_image;
 
 static void save_pgm_file(void)
 {
@@ -206,6 +142,20 @@ int transfer(int fd)
 	return frame_number;
 }
 
+void* open_shm(void)
+{
+	void* mem;
+	int fd = shm_open("lepton_data", O_RDWR | O_CREAT, 0);
+	if (fd < 1)
+		pabort("can't open shared memory region");
+
+	mem = mmap(NULL, SHMSZ, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	if (mem == MAP_FAILED)
+		pabort("can't mmap shared memory region");
+
+	return mem;
+}
+
 int main(int argc, char *argv[])
 {
 	int ret = 0;
@@ -262,6 +212,8 @@ int main(int argc, char *argv[])
 	printf("bits per word: %d\n", bits);
 	printf("max speed: %d Hz (%d KHz)\n", speed, speed/1000);
 
+	lepton_image = (uint16_t**) open_shm();
+
 	int row;
 	while ((row=transfer(fd)) != 59) {
 #ifdef DEBUG
@@ -273,8 +225,6 @@ int main(int argc, char *argv[])
 	}
 
 	close(fd);
-
-	memorize_pgm();
 
 	return ret;
 }
