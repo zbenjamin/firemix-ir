@@ -41,7 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sys/mman.h>
 #include <sys/ipc.h>
 
-#define SHMSZ    38400 //80x60x8bit
+#define SHMSZ    9600 //80x60x2 bytes
 //#define DEBUG
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
@@ -111,6 +111,7 @@ int transfer(int fd)
 	int i;
 	int frame_number = -1;
 	uint8_t tx[VOSPI_FRAME_SIZE] = {0, };
+	uint16_t* row_data;
 	struct spi_ioc_transfer tr = {
 		.tx_buf = (unsigned long)tx,
 		.rx_buf = (unsigned long)lepton_frame_packet,
@@ -131,11 +132,12 @@ int transfer(int fd)
 #endif
 		frame_number = lepton_frame_packet[1];
 
+		row_data = (uint16_t*) (lepton_frame_packet + 4);
 		if(frame_number < 60 )
 		{
 			for(i=0;i<80;i++)
 			{
-				lepton_image[frame_number][i] = (lepton_frame_packet[2*i+4] << 8 | lepton_frame_packet[2*i+5]);
+				lepton_image[frame_number][i] = row_data[i];
 			}
 		}
 	}
