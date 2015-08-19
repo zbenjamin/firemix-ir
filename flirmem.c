@@ -151,6 +151,10 @@ void* open_shm(void)
 	if (fd < 1)
 		pabort("can't open shared memory region");
 
+	int res = ftruncate(fd, SHMSZ);
+	if (res < 1)
+		pabort("can't ftruncate shared memory fd");
+
 	mem = mmap(NULL, SHMSZ, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	if (mem == MAP_FAILED)
 		pabort("can't mmap shared memory region");
