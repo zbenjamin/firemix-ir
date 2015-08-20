@@ -107,8 +107,8 @@ int transfer(int fd)
 	int i;
 	int frame_number = -1;
 	uint8_t tx[VOSPI_FRAME_SIZE] = {0, };
-	uint16_t* src_row_data;
-	uint16_t* dst_row_data;
+	uint8_t* src_row_data;
+	uint8_t* dst_row_data;
 	struct spi_ioc_transfer tr = {
 		.tx_buf = (unsigned long)tx,
 		.rx_buf = (unsigned long)lepton_frame_packet,
@@ -129,7 +129,7 @@ int transfer(int fd)
 #endif
 		frame_number = lepton_frame_packet[1];
 
-		src_row_data = (uint16_t*) (lepton_frame_packet + 4);
+		src_row_data = lepton_frame_packet + 4;
 		dst_row_data = lepton_image + frame_number * ROWSZ;
 		if(frame_number < COLSZ )
 		{
@@ -214,19 +214,24 @@ int main(int argc, char *argv[])
 	printf("max speed: %d Hz (%d KHz)\n", speed, speed/1000);
 
 	lepton_image = (uint16_t*) open_shm();
-
-	int row;
-	while ((row=transfer(fd)) != COLSZ - 1) {
+        while(1)
+	{
+		int row;
+		while ((row=transfer(fd)) != COLSZ - 1) {
 #ifdef DEBUG
-		if (row == -1) {
-			fprintf(stderr, "Incorrect row returned, retrying...\n");
-			//abort();
-		}
+			if (row == -1) {
+				fprintf(stderr, "Incorrect row returned, retrying...\n");
+				//abort();
+			}
 #endif
+		}
+	msync(lepton_image,SHMSZ,MS_SYNC);
+	sleep(1);
+        //close_shm();
 	}
 
 	close(fd);
-	save_pgm_file();
+	//save_pgm_file();
 
 	return ret;
 }
