@@ -130,7 +130,7 @@ int transfer(int fd)
 		frame_number = lepton_frame_packet[1];
 
 		src_row_data = lepton_frame_packet + 4;
-		dst_row_data = lepton_image + frame_number * ROWSZ;
+		dst_row_data = (uint8_t*) (lepton_image + frame_number * ROWSZ);
 		if(frame_number < COLSZ )
 		{
 			memcpy(dst_row_data, src_row_data, ROWSZ * 2);
