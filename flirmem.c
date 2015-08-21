@@ -107,8 +107,8 @@ int transfer(int fd)
 	int i;
 	int frame_number = -1;
 	uint8_t tx[VOSPI_FRAME_SIZE] = {0, };
-	uint8_t* src_row_data;
-	uint8_t* dst_row_data;
+	uint16_t* src_row_data;
+	uint16_t* dst_row_data;
 	struct spi_ioc_transfer tr = {
 		.tx_buf = (unsigned long)tx,
 		.rx_buf = (unsigned long)lepton_frame_packet,
@@ -129,11 +129,13 @@ int transfer(int fd)
 #endif
 		frame_number = lepton_frame_packet[1];
 
-		src_row_data = lepton_frame_packet + 4;
-		dst_row_data = (uint8_t*) (lepton_image + frame_number * ROWSZ);
+		src_row_data = (uint16_t*) (lepton_frame_packet + 4);
+		dst_row_data = lepton_image + frame_number * ROWSZ;
 		if(frame_number < COLSZ )
 		{
-			memcpy(dst_row_data, src_row_data, ROWSZ * 2);
+			for (i = 0; i < ROWSZ; ++i) {
+				dst_row_data[ROWSZ - i - 1] = src_row_data[i];
+			}
 		}
 	}
 	return frame_number;
