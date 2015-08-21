@@ -226,7 +226,7 @@ int main(int argc, char *argv[])
 #endif
 		}
 	msync(lepton_image,SHMSZ,MS_SYNC);
-	sleep(1);
+	usleep(37 * 1000);
         //close_shm();
 	}
 
